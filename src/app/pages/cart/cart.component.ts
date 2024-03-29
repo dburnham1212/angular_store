@@ -7,6 +7,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CartService } from '../../services/cart.service';
+import { HttpClient } from '@angular/common/http';
+import { loadStripe } from '@stripe/stripe-js';
 
 @Component({
   selector: 'app-cart',
@@ -46,7 +48,7 @@ export class CartComponent {
     'action'
   ];
 
-  constructor(private cartService: CartService) { }
+  constructor(private cartService: CartService, private http: HttpClient) { }
 
   ngOnInit(): void {
     this.dataSource = this.cart.items;
@@ -74,6 +76,17 @@ export class CartComponent {
 
   onRemoveQuantity(item: CartItem): void {
     this.cartService.removeQuantity(item);
+  }
+
+  onCheckout(): void {
+    this.http.post('http://localhost:4242/checkout', {
+      items: this.cart.items
+    }).subscribe(async(res: any) => {
+      let stripe = await loadStripe('pk_test_51NXppaIpYcJ7yA502LbaoxZI7AFwYG1zFRNNX9Xu3C0RFgd0f3CGgL2tk1Ei8BuBTS3a4TsbkNjYZ1RUa3LdJp5f00Qqm0UkRP');
+      stripe?.redirectToCheckout({
+        sessionId: res.id
+      })
+    })
   }
 }
 
